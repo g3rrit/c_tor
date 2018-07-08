@@ -8,6 +8,8 @@
 
     <option include="true">
         src/main.c
+        src/tor_util.c
+        src/tor_exe.c
         src/tor_controller.c
     </option>
 

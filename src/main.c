@@ -3,11 +3,15 @@
 #include <string.h>
 
 #include "tor_controller.h"
+#include "tor_exe.h"
+#include "tor_util.h"
 
 int main(int argc, char **argv)
 {
 #define COMMAND_LEN     256
     char command[COMMAND_LEN];
+
+    socket_init();
 
     do
     {
@@ -24,7 +28,13 @@ int main(int argc, char **argv)
 
         if(!strcmp(command, "start"))
         {
-            tor_start("..", argv);
+            const char *cmd[] = {
+                "",
+                "--controlport",
+                "9051",
+                0
+            };
+            tor_start("..", cmd);
         }
         else if(!strcmp(command, "running"))
         {
@@ -40,7 +50,7 @@ int main(int argc, char **argv)
         }
         else if(!strcmp(command, "start_controller"))
         {
-            if(tor_start_controller(9051, ""))
+            if(tor_start_controller("9051", "abcdefg4"))
                 printf("successfully started tor controller\n");
         }
         else if(!strcmp(command, "stop_controller"))
@@ -52,4 +62,8 @@ int main(int argc, char **argv)
         
 
     } while(strcmp(command, "quit"));
+
+    socket_delete();
+    
+    return 0;
 }

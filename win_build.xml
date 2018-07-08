@@ -1,0 +1,22 @@
+<build compiler="gcc">
+
+    <option> -o build/tor-con </option>
+
+    <option include="true" prefix="-I">
+        include
+    </option>
+
+    <option include="true">
+        src/main.c
+        src/tor_util.c
+        src/tor_exe.c
+        src/tor_controller.c
+    </option>
+
+    <option include="true" prefix="-l">
+        Ws2_32
+        Mswsock
+        AdvApi32
+    </option>
+
+</build>
