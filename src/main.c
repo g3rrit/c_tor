@@ -38,6 +38,16 @@ int main(int argc, char **argv)
             if(tor_stop())
                 printf("killed tor process\n");
         }
+        else if(!strcmp(command, "start_controller"))
+        {
+            if(tor_start_controller(9051, ""))
+                printf("successfully started tor controller\n");
+        }
+        else if(!strcmp(command, "stop_controller"))
+        {
+            if(tor_stop_controller())
+                printf("successfully stoped tor controller\n");
+        }
 
         
 
