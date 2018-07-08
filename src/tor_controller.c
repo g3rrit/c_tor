@@ -9,6 +9,22 @@
 
 sockh con_socket = 0;
 
+int get_res_code(char *res)
+{
+    if(strlen(res) < 3)
+    {
+        printf("invalid res string\n");
+        return 0;
+    }
+
+    char res_str[4];
+    res_str[3] = 0;
+    memcpy(res_str, res, 3);
+    int res_code = atoi(res_str);
+
+    return res_code;
+}
+
 int tor_start_controller(char *port, char *auth)
 {
     if(!tor_is_running())
@@ -19,7 +35,7 @@ int tor_start_controller(char *port, char *auth)
 
     if(con_socket)
     {
-        printf("controll socket already in use\n");
+        printf("control socket already in use\n");
         return 0;
     }
 
@@ -102,10 +118,13 @@ int tor_start_controller(char *port, char *auth)
         return 0;
     }
 
+    /*
     char ret_code[4];
     memcpy(ret_code, auth_cmd, 3);
     ret_code[3] = 0;
     int ret_val = atoi(ret_code);
+    */
+    int ret_val = get_res_code(auth_cmd);
 
     if(ret_val != 250)
     {
@@ -120,7 +139,7 @@ int tor_stop_controller()
 {
     if(!con_socket)
     {
-        printf("no controll socket in use\n");
+        printf("no control socket in use\n");
         return 0;
     }
 #ifdef _WIN32
@@ -134,5 +153,31 @@ int tor_stop_controller()
 
 int tor_send_command(char *command, char *res)
 {
+    if(!con_socket)
+    {
+        printf("no control socket active\n");
+        return 0;
+    }
 
+    int cmd_len = strlen(command);
+    if(!socket_send_all(con_socket, command, cmd_len))
+    {
+        printf("error sending complete command\n");
+        return 0;
+    }
+
+    if(recv(con_socket, res, CON_RES_SIZE, 0) <= 0)
+    {
+        printf("error receiving response\n");
+        return 0;
+    }
+
+    int res_code = get_res_code(res);
+    if(res_code != 250)
+    {
+        printf("error: %i | %s\n", res_code, res);
+        return 0;
+    }
+
+    return 1;
 }

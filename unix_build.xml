@@ -11,6 +11,7 @@
         src/tor_util.c
         src/tor_exe.c
         src/tor_controller.c
+        src/tor_service.c
     </option>
 
 </build>

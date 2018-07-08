@@ -5,6 +5,7 @@
 #include "tor_controller.h"
 #include "tor_exe.h"
 #include "tor_util.h"
+#include "tor_service.h"
 
 int main(int argc, char **argv)
 {
@@ -13,6 +14,7 @@ int main(int argc, char **argv)
 
     socket_init();
 
+    char service_id[16];
     do
     {
         memset(command, 0, COMMAND_LEN);
@@ -26,6 +28,30 @@ int main(int argc, char **argv)
 
         printf("command: %s\n", command);
 
+        if(!strcmp(command, "start"))
+        {
+            if(!tor_service_init(".."))
+                printf("error\n");
+        }
+        else if(!strcmp(command, "add"))
+        {
+            if(!tor_service_add(5555, service_id))
+                printf("error\n");
+
+            printf("id: %s\n", service_id);
+        }
+        else if(!strcmp(command, "remove"))
+        {
+            if(!tor_service_remove(service_id))
+                printf("error\n");
+        }
+        else if(!strcmp(command, "delete"))
+        {
+            if(!tor_service_delete())
+                printf("error\n");
+        }
+
+        /*
         if(!strcmp(command, "start"))
         {
             const char *cmd[] = {
@@ -58,7 +84,7 @@ int main(int argc, char **argv)
             if(tor_stop_controller())
                 printf("successfully stoped tor controller\n");
         }
-
+        */
         
 
     } while(strcmp(command, "quit"));
