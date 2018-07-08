@@ -1,0 +1,14 @@
+<build compiler="gcc">
+
+    <option> -o build/tor-controller </option>
+
+    <option include="true" prefix="-I">
+        include
+    </option>
+
+    <option include="true">
+        src/main.c
+        src/tor_controller.c
+    </option>
+
+</build>
