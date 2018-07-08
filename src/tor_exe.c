@@ -23,6 +23,12 @@ pid_t tor_pid;
 
 int tor_start(char *tor_bin_dir, char **argv)
 {
+    if(tor_is_running())
+    {
+        printf("tor is already running\n");
+        return 1;
+    }
+    
     char tor_bin_url[64];
     memset(tor_bin_url, 0, 64);
 
@@ -36,8 +42,21 @@ int tor_start(char *tor_bin_dir, char **argv)
         printf("arg: %s\n", argv[i]);
 
 #ifdef _WIN32
+    char arg_win[64];
+    memset(arg_win, 0, 64);
+    char *cp_ptr = arg_win;
+    for(int i = 0; argv[i] != 0; i++)
+    {
+        strcpy(cp_ptr, argv[i]);
+        cp_ptr += strlen(argv[i]);
+        *cp_ptr = ' ';
+        cp_ptr++;
+    }
+
+    printf("win_arg: %s\n", arg_win);
+
     STARTUPINFO info={sizeof(info)};
-    if(!CreateProcess(tor_bin_url, (LPSTR)argv, NULL, NULL, TRUE, 0, NULL, NULL, &info, &tor_info))
+    if(!CreateProcess(tor_bin_url, (LPSTR)arg_win, NULL, NULL, TRUE, 0, NULL, NULL, &info, &tor_info))
     {
         printf("error creating tor process\n");
         return 0;
@@ -104,6 +123,12 @@ int tor_is_running()
 
 int tor_stop()
 {
+    if(!tor_is_running())
+    {
+        printf("tor is not running\n");
+        return 1;
+    }
+
 #ifdef _WIN32
     UINT exit_code = 0;
     if(!TerminateProcess(tor_info.hProcess, exit_code))

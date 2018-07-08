@@ -29,7 +29,7 @@ int main(int argc, char **argv)
         if(!strcmp(command, "start"))
         {
             const char *cmd[] = {
-                "",
+                " ",
                 "--controlport",
                 "9051",
                 0
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
         }
         else if(!strcmp(command, "start_controller"))
         {
-            if(tor_start_controller("9051", "abcdefg4"))
+            if(tor_start_controller("9051", ""))
                 printf("successfully started tor controller\n");
         }
         else if(!strcmp(command, "stop_controller"))

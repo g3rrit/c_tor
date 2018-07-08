@@ -2,19 +2,6 @@
 
 #include <stdio.h>
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include "winsock2.h"
-#include "ws2tcpip.h"
-#include "windows.h"
-#else
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#endif
-
 int _socket_init = 0;
 
 int socket_init()
@@ -57,7 +44,7 @@ int socket_delete()
 }
 
 
-int socket_recv_all(int sock, char *data, int size)
+int socket_recv_all(sockh sock, char *data, int size)
 {
     if(sock < 0 || !data)
         return 0;
@@ -74,7 +61,7 @@ int socket_recv_all(int sock, char *data, int size)
     return total;
 }
 
-int socket_send_all(int sock, char *data, int size)
+int socket_send_all(sockh sock, char *data, int size)
 {
     if(sock < 0 || !data)
         return 0;

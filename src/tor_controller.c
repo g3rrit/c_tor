@@ -1,30 +1,13 @@
 #include "tor_controller.h"
 
 #include "tor_exe.h"
+#include "tor_util.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include "winsock2.h"
-#include "ws2tcpip.h"
-#include "windows.h"
-#else
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#endif
-
-#ifdef _WIN32
-HANDLE con_socket = 0;
-#else
-int con_socket = 0;
-#endif
+sockh con_socket = 0;
 
 int tor_start_controller(char *port, char *auth)
 {
@@ -119,13 +102,14 @@ int tor_start_controller(char *port, char *auth)
         return 0;
     }
 
-    char ret_code[3];
+    char ret_code[4];
     memcpy(ret_code, auth_cmd, 3);
+    ret_code[3] = 0;
     int ret_val = atoi(ret_code);
 
     if(ret_val != 250)
     {
-        printf("authentification error\n| %s\n", auth_cmd);
+        printf("authentification error\n| %i | %s\n", ret_val, auth_cmd);
         return 0;
     }
 
@@ -141,7 +125,6 @@ int tor_stop_controller()
     }
 #ifdef _WIN32
     closesocket(con_socket);
-    CloseHandle(con_socket);
 #else
     close(con_socket);
 #endif
