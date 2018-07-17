@@ -6,6 +6,10 @@
         include
     </option>
 
+    <option include="false" prefix="-D">
+        PSAPI_VERSION=1
+    </option>
+
     <option include="true">
         src/main.c
         src/tor_util.c
@@ -18,6 +22,7 @@
         Ws2_32
         Mswsock
         AdvApi32
+        Psapi
     </option>
 
 </build>

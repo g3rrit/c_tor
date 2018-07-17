@@ -75,30 +75,6 @@ int tor_start_controller(char *port, char *auth)
     }
 
     freeaddrinfo(res);
-    /*
-    con_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if(con_socket < 0)
-    {
-        printf("error creating controll socket\n");
-        return 0;
-    }
-
-    unsigned long addr;
-    struct sockaddr_in addr_in;
-    memset(&addr_in, 0, sizeof(struct sockaddr_in));
-
-    addr = inet_addr("127.0.0.1");
-    memcpy(&addr_in.sin_addr, &addr, sizeof(addr));
-    addr_in.sin_family = AF_INET;
-    addr_in.sin_port = htons(port);
-
-    if(connect(con_socket, (struct sockaddr*)&addr_in, sizeof(addr_in)) < 0)
-    {
-        printf("error connecting to controll port\n");
-        tor_stop_controller();
-        return 0;
-    }
-    */
 
     char auth_cmd[64];
     sprintf(auth_cmd, "authenticate %s\r\n", auth);

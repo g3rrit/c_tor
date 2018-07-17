@@ -28,6 +28,7 @@ int main(int argc, char **argv)
 
         printf("command: %s\n", command);
 
+        /*
         if(!strcmp(command, "start"))
         {
             if(!tor_service_init(".."))
@@ -50,8 +51,8 @@ int main(int argc, char **argv)
             if(!tor_service_delete())
                 printf("error\n");
         }
+        */
 
-        /*
         if(!strcmp(command, "start"))
         {
             const char *cmd[] = {
@@ -84,8 +85,6 @@ int main(int argc, char **argv)
             if(tor_stop_controller())
                 printf("successfully stoped tor controller\n");
         }
-        */
-        
 
     } while(strcmp(command, "quit"));
 

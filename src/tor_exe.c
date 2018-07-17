@@ -8,14 +8,19 @@ int tor_process_status;
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
-#include "winsock2.h"
-#include "ws2tcpip.h"
-#include "windows.h"
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+#include <tchar.h>
+#include <psapi.h>
 #define TOR_EXE_NAME "/tor_bin/win/tor.exe"
 PROCESS_INFORMATION tor_info;
+HANDLE h_tor = 0;
 #else
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
+#include <dirent.h>
 #include <unistd.h>
 #define TOR_EXE_NAME "/tor_bin/mac/tor"
 pid_t tor_pid;
@@ -73,7 +78,6 @@ int tor_start(char *tor_bin_dir, char **argv)
     if(tor_pid > 0)
     {
         //parent
-        printf("in parent\n");
         return 1;
     }
     else if(tor_pid == 0)
@@ -94,11 +98,61 @@ int tor_start(char *tor_bin_dir, char **argv)
 #endif
 }
 
+
+
 int tor_is_running()
 {
 #ifdef _WIN32
+    //get tor handle
+    h_tor = 0;
+    DWORD aprocesses[1024], cb_needed, cprocesses;
+
+    if(!EnumProcesses(aprocesses, sizeof(aprocesses), &cb_needed))
+    {
+        printf("error enumerating processes\n");
+        return -1;
+    }
+
+    cprocesses = cb_needed/sizeof(DWORD);
+    for(int i = 0; i < cprocesses; i++)
+    {
+        if(aprocesses[i] != 0)
+        {
+            TCHAR sz_process_name[MAX_PATH] = TEXT("<unknown>");
+
+            HANDLE hprocess = OpenProcess(PROCESS_QUERY_INFORMATION |
+                                            PROCESS_VM_READ,
+                                            FALSE, aprocesses[i]);
+
+            if(NULL != hprocess)
+            {
+                HMODULE hmod;
+                DWORD cb_neededp; 
+
+                if(EnumProcessModules(hprocess, &hmod, sizeof(hmod), &cb_neededp))
+                {
+                    GetModuleBaseName(hprocess, hmod, sz_process_name, sizeof(sz_process_name)/sizeof(TCHAR));
+                }
+            }
+
+            if(!strcmp(sz_process_name, "tor.exe"))
+            {
+                printf("process found\n");
+                h_tor = hprocess;
+                break;
+            }
+        }
+    }
+
+    if(!h_tor)
+    {
+        printf("error getting handle for tor\n");
+        return 0;
+    }
+    //
+
     DWORD exit_code;
-    if(!GetExitCodeProcess(tor_info.hProcess, &exit_code))
+    if(!GetExitCodeProcess(h_tor, &exit_code))
     {
         printf("no tor process detected\n");
         return 0;
@@ -112,12 +166,59 @@ int tor_is_running()
 
     return 1;
 #else
+    /*
     int status;
     int res;
     res = (int)waitpid(tor_pid, &status, WNOHANG);
     printf("status: %i\n", status);
-
     return !res;
+    */
+   	DIR* dir;
+    struct dirent* ent;
+    char buf[512];
+
+    long  pid;
+    char pname[100] = {0,};
+    char state;
+    FILE *fp=NULL; 
+
+    if(!(dir = opendir("/proc"))) 
+    {
+        perror("can't open /proc");
+        return -1;
+    }
+
+    while((ent = readdir(dir)) != NULL) 
+    {
+        long lpid = atol(ent->d_name);
+        if(lpid < 0)
+            continue;
+        snprintf(buf, sizeof(buf), "/proc/%ld/stat", lpid);
+        fp = fopen(buf, "r");
+
+        if(fp)
+        {
+            if((fscanf(fp, "%ld (%[^)]) %c", &pid, pname, &state)) != 3 )
+            {
+                printf("fscanf failed \n");
+                fclose(fp);
+                closedir(dir);
+                return -1; 
+            }
+            if(!strcmp(pname, "tor")) 
+            {
+                fclose(fp);
+                closedir(dir);
+                //return (pid_t)lpid;
+                return 1;
+            }
+            fclose(fp);
+        }
+    }
+
+    closedir(dir);
+
+    return 0;
 #endif
 }
 
@@ -133,7 +234,7 @@ int tor_stop()
     UINT exit_code = 0;
     if(!TerminateProcess(tor_info.hProcess, exit_code))
     {
-        printf("error killing tor | might be dead already\n");
+        printf("error killing tor\n");
         return 0;
     }
 
@@ -142,7 +243,7 @@ int tor_stop()
 
     if(kill(tor_pid, SIGKILL) == -1)
     {
-        printf("error killing tor | might be dead already\n");
+        printf("error killing tor\n");
         return 0;
     }
     
