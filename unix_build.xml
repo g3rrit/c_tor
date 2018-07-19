@@ -3,15 +3,34 @@
     <option> -o build/tor-con </option>
 
     <option include="true" prefix="-I">
-        include
+        src
+        src/controller
+        src/host
+        src/socks
+        src/thread
+        src/thread/container
+        src/util
     </option>
 
     <option include="true">
         src/main.c
-        src/tor_util.c
-        src/tor_exe.c
-        src/tor_controller.c
-        src/tor_service.c
+        src/controller/tor_controller.c
+        src/controller/tor_exe.c
+        src/controller/tor_service.c
+        src/host/host.c
+        src/socks/socks.c
+        src/thread/container/thread_map.c
+        src/thread/thread.c
+        src/util/log.c
+        src/util/socket.c
+        src/util/tor_util.c
     </option>
+
+    <option include="true" prefix="-l">
+        pthread
+    </option>
+
+
+
 
 </build>

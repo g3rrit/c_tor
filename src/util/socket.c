@@ -1,6 +1,8 @@
-#include "tor_util.h"
+#include "socket.h"
 
 #include <stdio.h>
+
+#include "socks.h"
 
 int _socket_init = 0;
 
@@ -44,7 +46,7 @@ int socket_delete()
 }
 
 
-int socket_recv_all(sockh sock, char *data, int size)
+int socket_recv_all(sock_t sock, char *data, int size)
 {
     if(sock < 0 || !data)
         return 0;
@@ -61,7 +63,7 @@ int socket_recv_all(sockh sock, char *data, int size)
     return total;
 }
 
-int socket_send_all(sockh sock, char *data, int size)
+int socket_send_all(sock_t sock, char *data, int size)
 {
     if(sock < 0 || !data)
         return 0;
@@ -77,3 +79,19 @@ int socket_send_all(sockh sock, char *data, int size)
     }
     return total;
 }
+
+sock_t socket_connect(char *ip, char *port)
+{
+    return tor_connect(ip, port);
+}
+
+int socket_close(sock_t s)
+{
+#ifdef _WIN32
+    closesocket(s);
+#else
+    close(s);
+#endif
+}
+
+

@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "log.h"
+
 int tor_process_status;
 
 #ifdef _WIN32
@@ -30,7 +32,7 @@ int tor_start(char *tor_bin_dir, char **argv)
 {
     if(tor_is_running())
     {
-        printf("tor is already running\n");
+        log_err("tor is already running\n");
         return 1;
     }
     
@@ -41,10 +43,10 @@ int tor_start(char *tor_bin_dir, char **argv)
     strcpy(tor_bin_url, tor_bin_dir);
     strcpy(tor_bin_url + tor_dir_len, TOR_EXE_NAME);
 
-    printf("executing tor exe: %s\n", tor_bin_url);
+    log_msg("executing tor exe: %s\n", tor_bin_url);
 
     for(int i = 0; argv[i] != 0; i++)
-        printf("arg: %s\n", argv[i]);
+        log_msg("arg: %s\n", argv[i]);
 
 #ifdef _WIN32
     char arg_win[64];
@@ -58,12 +60,12 @@ int tor_start(char *tor_bin_dir, char **argv)
         cp_ptr++;
     }
 
-    printf("win_arg: %s\n", arg_win);
+    log_msg("win_arg: %s\n", arg_win);
 
     STARTUPINFO info={sizeof(info)};
     if(!CreateProcess(tor_bin_url, (LPSTR)arg_win, NULL, NULL, TRUE, 0, NULL, NULL, &info, &tor_info))
     {
-        printf("error creating tor process\n");
+        log_err("error creating tor process\n");
         return 0;
         /*
         WaitForSingleObject(processInfo.hProcess, INFINITE);
@@ -86,13 +88,13 @@ int tor_start(char *tor_bin_dir, char **argv)
 
         execv(tor_bin_url, argv);
 
-        printf("failed to start tor process\n");
+        log_err("failed to start tor process\n");
         return 0;
     }
     else
     {
         //error
-        printf("error forking process\n");
+        log_err("error forking process\n");
         return 0;
     }
 #endif
@@ -109,7 +111,7 @@ int tor_is_running()
 
     if(!EnumProcesses(aprocesses, sizeof(aprocesses), &cb_needed))
     {
-        printf("error enumerating processes\n");
+        log_err("error enumerating processes\n");
         return -1;
     }
 
@@ -137,7 +139,7 @@ int tor_is_running()
 
             if(!strcmp(sz_process_name, "tor.exe"))
             {
-                printf("process found\n");
+                log_msg("process found\n");
                 h_tor = hprocess;
                 break;
             }
@@ -146,7 +148,7 @@ int tor_is_running()
 
     if(!h_tor)
     {
-        printf("error getting handle for tor\n");
+        log_err("handle for tor\n");
         return 0;
     }
     //
@@ -154,13 +156,13 @@ int tor_is_running()
     DWORD exit_code;
     if(!GetExitCodeProcess(h_tor, &exit_code))
     {
-        printf("no tor process detected\n");
+        log_err("no tor process detected\n");
         return 0;
     }
 
     if(exit_code != STILL_ACTIVE)
     {
-        printf("exit code: %i\n", (int) exit_code);
+        log_err("exit code: %i\n", (int) exit_code);
         return 0;
     }
 
@@ -184,7 +186,7 @@ int tor_is_running()
 
     if(!(dir = opendir("/proc"))) 
     {
-        perror("can't open /proc");
+        log_err("can't open /proc");
         return -1;
     }
 
@@ -200,7 +202,7 @@ int tor_is_running()
         {
             if((fscanf(fp, "%ld (%[^)]) %c", &pid, pname, &state)) != 3 )
             {
-                printf("fscanf failed \n");
+                log_err("fscanf failed \n");
                 fclose(fp);
                 closedir(dir);
                 return -1; 
@@ -226,7 +228,7 @@ int tor_stop()
 {
     if(!tor_is_running())
     {
-        printf("tor is not running\n");
+        log_err("tor is not running\n");
         return 1;
     }
 
@@ -234,7 +236,7 @@ int tor_stop()
     UINT exit_code = 0;
     if(!TerminateProcess(tor_info.hProcess, exit_code))
     {
-        printf("error killing tor\n");
+        log_err("error killing tor\n");
         return 0;
     }
 
@@ -243,7 +245,7 @@ int tor_stop()
 
     if(kill(tor_pid, SIGKILL) == -1)
     {
-        printf("error killing tor\n");
+        log_err("error killing tor\n");
         return 0;
     }
     

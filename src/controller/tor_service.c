@@ -4,13 +4,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifndef _WIN32
 #include <time.h>
-#endif
 
 #include "tor_controller.h"
 #include "tor_exe.h"
-
+#include "log.h"
 #include "tor_util.h"
 
 int tor_service_init(char *tor_bin_dir)
@@ -23,7 +21,7 @@ int tor_service_init(char *tor_bin_dir)
     };
     if(!tor_start(tor_bin_dir, argv))
     {
-        printf("error starting tor\n");
+        log_err("starting tor\n");
         return 0;
     }
 
@@ -41,7 +39,7 @@ int tor_service_init(char *tor_bin_dir)
 
     if(!tor_start_controller("9051", ""))
     {
-        printf("error starting tor controller\n");
+        log_err("starting tor controller\n");
         tor_stop();
         return 0;
     }
@@ -49,18 +47,18 @@ int tor_service_init(char *tor_bin_dir)
     return 1;
 }
 
-int tor_service_add(int port, char *service_id)
+int tor_service_add(char *port, char *service_id)
 {
     char res_buffer[CON_RES_SIZE];
     char command[64];
     memset(command, 0, 64);
-    sprintf(command, "ADD_ONION NEW:BEST Flags=DiscardPK Port=%i\r\n", port);
+    sprintf(command, "ADD_ONION NEW:BEST Flags=DiscardPK Port=%s\r\n", port);
     if(!tor_send_command(command, res_buffer))
     {
-        printf("error adding service\n");
+        log_err("adding service\n");
         return 0;
     }
-    printf("response: %s\n", res_buffer);
+    log_msg("response: %s\n", res_buffer);
     memcpy(service_id, res_buffer + 14, 16);
 
     return 1;
@@ -68,24 +66,16 @@ int tor_service_add(int port, char *service_id)
 
 int tor_service_remove(char *service_id)
 {
-    /*
-    if(strlen(service_id) != 16)
-    {
-        printf("invalid service id\n");
-        return 0;
-    }
-    */
-
     char res_buffer[CON_RES_SIZE];
     char command[] = "DEL_ONION xxxxxxxxxxxxxxxx\r\n";
     memcpy(command + 10, service_id, 16);
-    printf("command: %s\n", command);
+    log_msg("command: %s\n", command);
     if(!tor_send_command(command, res_buffer))
     {
-        printf("error removing service\n");
+        log_err("removing service\n");
         return 0;
     }
-    printf("response: %s\n", res_buffer);
+    log_msg("response: %s\n", res_buffer);
 
     return 1;
 }
@@ -94,13 +84,13 @@ int tor_service_delete()
 {
     if(!tor_stop_controller())
     {
-        printf("error stopping tor controller\n");
+        log_err("stopping tor controller\n");
         return 0;
     }
 
     if(!tor_stop())
     {
-        printf("error stopping tor\n");
+        log_err("stopping tor\n");
         return 0;
     }
 
