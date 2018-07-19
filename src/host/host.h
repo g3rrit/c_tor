@@ -4,9 +4,11 @@
 #include "socket.h"
 
 //todo add callback for address
-int host_start(char *port, void (*client_cb)(void *env), void *env);
+int host_start(char *port, 
+                void (*host_started)(char *host_id, void *env), void *host_env,
+                void (*client_cb)(sock_t s, void *env), void *client_env);
 
-int host_stop(char *ip);
+int host_stop(char *id);
 
 int host_delete();
 
