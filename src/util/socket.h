@@ -30,7 +30,7 @@ int socket_recv_all(sock_t sock, char *data, int size);
 
 int socket_send_all(sock_t sock, char *data, int size);
 
-sock_t socket_connect(char *ip, char *port);
+sock_t socket_connect(char *id, char *port);
 
 int socket_close(sock_t s);
 

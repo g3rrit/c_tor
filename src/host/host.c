@@ -37,12 +37,13 @@ struct host_t
 void _client_cb(struct client_env_t *c_env)
 {
     c_env->client_cb(c_env->s, c_env->env);
-    free(env);
+    socket_close(c_env->s);
+    free(c_env);
 }
 
 int host_start(char *port, 
                 void (*host_started)(char *host_id, void *env), void *host_env,
-                void (*client_cb)(sock_t s, void *env), void *client_env);
+                void (*client_cb)(sock_t s, void *env), void *client_env)
 {
     if(!_host_map_started)
         thread_map_init(&_host_map);
@@ -50,7 +51,7 @@ int host_start(char *port,
     int ret_val = 0;
 
     //start tor hidden service
-    char host_id[17];
+    char host_id[17] = {0,};
     if(!tor_service_add(port, host_id))
     {
         log_err("starting tor service\n");
@@ -147,12 +148,12 @@ int host_start(char *port,
             if(c_socket != -1)
             {
                 log_msg("accepted client connection");
-                struct client_env_t *c_env = malloc(sizeof(struct client_env));
+                struct client_env_t *c_env = malloc(sizeof(struct client_env_t));
                 c_env->client_cb = client_cb;
                 c_env->env = client_env;
-                e_env->s = c_socket;
+                c_env->s = c_socket;
                 
-                thread_create(_client_cb, c_env);
+                thread_create((void(*)(void*))_client_cb, c_env);
             }
         } while(1);
 
@@ -173,7 +174,7 @@ ret:
 
 int host_stop(char *id)
 {
-    log_msg("stopping host ip: %s\n", ip);
+    log_msg("stopping host ip: %s\n", id);
 
     if(!_host_map_started)
     {
@@ -181,7 +182,7 @@ int host_stop(char *id)
         return 0;
     }
 
-    struct host_t *host = host_map_get(ip);
+    struct host_t *host = host_map_get(id);
     if(!host)
     {
         log_err("host not found\n");
@@ -191,7 +192,7 @@ int host_stop(char *id)
     if(host->has_stopped)
         return 1;
 
-    if(!host_map_remove(ip))
+    if(!host_map_remove(id))
         log_err("removing host from map\n");
 
     host->is_running = 0;
@@ -208,6 +209,12 @@ int host_stop(char *id)
     if(!host->is_stopped)
     {
         log_err("Waited to long for host to stop\n");
+        return 0;
+    }
+
+    if(!tor_service_remove(id))
+    {
+        log_err("stopping tor service\n");
         return 0;
     }
 
@@ -238,7 +245,7 @@ int host_delete()
         return 1;
     }
 
-    if(thread_map_for_each(&_host_map, &host_map_free_for_each, 0))
+    if(thread_map_for_each(&_host_map, (void*(*)(struct thread_map_t*,void*,char*,void*))&host_map_free_for_each, 0))
     {
         log_err("stopping all hosts\n");
         return 0;

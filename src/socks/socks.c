@@ -28,7 +28,7 @@ sock_t socks_connect(char *dest_ip, char *dest_port, char *ip, char *port, char 
     if(!socks5_request(sock, dest_ip, dest_port))
         goto fail;
 
-    log_msg("successfully established a connection");
+    log_msg("successfully established a connection\n");
 
     return sock;
 
@@ -40,7 +40,7 @@ fail:
 
 sock_t tor_connect(char *ip, char *port)
 {
-    log_msg("dest_ip: %s - dest_port: %s", ip, port);
+    log_msg("dest_ip: %s - dest_port: %s\n", ip, port);
     return socks_connect(ip, port, "127.0.0.1", "9050", "usr", "pwd");
 }
 

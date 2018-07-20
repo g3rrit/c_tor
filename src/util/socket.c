@@ -1,8 +1,10 @@
 #include "socket.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "socks.h"
+#include "log.h"
 
 int _socket_init = 0;
 
@@ -10,7 +12,7 @@ int socket_init()
 {
     if(_socket_init)
     {
-        printf("socket already started\n");
+        log_err("socket already started\n");
         return 1;
     }
 #ifdef _WIN32
@@ -18,7 +20,7 @@ int socket_init()
 
 	int ri = 0;
 	if ((ri = WSAStartup(MAKEWORD(2, 2), &wsaData)) != 0) {
-		printf("WSAStartup failed\n");
+		log_err("WSAStartup failed\n");
 		WSACleanup();
 		return 0;
 	}
@@ -33,7 +35,7 @@ int socket_delete()
 {
     if(!_socket_init)
     {
-        printf("socket not started\n");
+        log_err("socket not started\n");
         return 1;
     }
 #ifdef _WIN32
@@ -80,8 +82,17 @@ int socket_send_all(sock_t sock, char *data, int size)
     return total;
 }
 
-sock_t socket_connect(char *ip, char *port)
+sock_t socket_connect(char *id, char *port)
 {
+    if(strlen(id) != 16)
+    {
+        log_err("invalid onion id\n");
+        return 0;
+    }
+
+    char ip[24] = {0};
+    snprintf(ip, 24, "%s.onion", id);
+
     return tor_connect(ip, port);
 }
 
