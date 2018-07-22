@@ -33,7 +33,7 @@ int tor_start(char *tor_bin_dir, char **argv)
     if(tor_is_running())
     {
         log_err("tor is already running\n");
-        return 1;
+        return 2;
     }
     
     char tor_bin_url[64];
