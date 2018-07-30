@@ -43,7 +43,8 @@ void _client_cb(struct client_env_t *c_env)
 
 int host_start(char *port, 
                 void (*host_started)(char *host_id, void *env), void *host_env,
-                void (*client_cb)(sock_t s, void *env), void *client_env)
+                void (*client_cb)(sock_t s, void *env), void *client_env,
+                int stop_on_connection)
 {
     if(!_host_map_started)
         thread_map_init(&_host_map);
@@ -115,6 +116,8 @@ int host_start(char *port,
     host->is_stopped = 0;
     host->has_stopped = 0;
 
+    host_map_add(host_id, host);
+
     struct timeval timeout;
     timeout.tv_sec = 2;
     timeout.tv_usec = 0;
@@ -154,6 +157,9 @@ int host_start(char *port,
                 c_env->s = c_socket;
                 
                 thread_create((void(*)(void*))_client_cb, c_env);
+
+                if(stop_on_connection)
+                    return 1;
             }
         } while(1);
 

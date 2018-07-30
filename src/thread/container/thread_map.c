@@ -27,6 +27,9 @@ int thread_map_delete(struct thread_map_t *this)
 
         f_entry = entry;
     }
+	if(f_entry)
+		free(f_entry);
+	
     this->head = 0;
     this->size = 0;
     mutex_unlock(this->list_mutex);
@@ -71,6 +74,8 @@ void *thread_map_remove(struct thread_map_t *this, char *name)
             mutex_unlock(this->list_mutex);
             return res;
         }
+		
+		p_entry = entry;
     }
     mutex_unlock(this->list_mutex);
 

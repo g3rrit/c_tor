@@ -106,7 +106,7 @@ struct host_env_t
 
 void host_start_thread(struct host_env_t *env)
 {
-    host_start("4444", env->host_cb, env->local_env, env->client_cb, 0);
+    host_start("4444", env->host_cb, env->local_env, env->client_cb, 0, 1);
 }
 
 struct local_env_t local_env;
