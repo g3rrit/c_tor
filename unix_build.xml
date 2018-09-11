@@ -1,6 +1,6 @@
 <build compiler="gcc">
 
-    <option> -o build/tor-con </option>
+    <option> -o build/tor_con </option>
 
     <option include="true" prefix="-I">
         src
